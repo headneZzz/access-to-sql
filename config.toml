@@ -1,0 +1,3 @@
+access_odbc_connection = "Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=D:/test/test.mdb;"
+sql_server_odbc_connection = "Driver={SQL Server};Server=localhost;Database=tag1;Uid=sa;Pwd=Password_11"
+file_path = "D:/test/funds.txt"

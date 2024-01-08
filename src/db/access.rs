@@ -1,19 +1,19 @@
-use odbc::{Connection, create_environment_v3_with_os_db_encoding, Data, Statement};
+use odbc::{Connection, Data, Statement};
 use odbc::odbc_safe::AutocommitOn;
 
 #[derive(Debug)]
-pub struct AccessData {
-    номер_дела: String,
-    наименование_дела: String,
-    год_начала: i32,
-    год_конца: i32,
-    количество_листов: i32,
-    точная_дата: String,
-    номер_описи: String,
-    номер_фонда: String,
+pub struct AccessUnit {
+    pub номер_дела: String,
+    pub наименование_дела: String,
+    pub год_начала: i32,
+    pub год_конца: i32,
+    pub количество_листов: i32,
+    pub точная_дата: String,
+    pub номер_описи: String,
+    pub номер_фонда: String,
 }
 
-pub fn fetch_access_data(conn: &Connection<AutocommitOn>, fund_num: &str, inventory_num: &str) -> odbc::Result<Vec<AccessData>> {
+pub fn fetch_access_data(conn: &Connection<AutocommitOn>, fund_num: &str, inventory_num: &str) -> odbc::Result<Vec<AccessUnit>> {
     let sql_text = r#"SELECT
     [Номер_Дела], [Наименование_дела], [Т_Дело].[Год_начала], [Т_Дело].[Год_конца], [Кол-во_листов], [Точная_дата], [Т_Описи].[Номер_Описи], [Т_Фонд].[Номер_фонда]
     FROM
@@ -29,7 +29,6 @@ pub fn fetch_access_data(conn: &Connection<AutocommitOn>, fund_num: &str, invent
 
     if let Data(mut cursor) = stmt.exec_direct(sql_text)? {
         while let Some(mut row) = cursor.fetch()? {
-            // Извлечение данных из каждого столбца
             let номер_дела: String = row.get_data(1)?.unwrap_or_default();
             let наименование_дела: String = row.get_data(2)?.unwrap_or_default();
             let год_начала: i32 = row.get_data(3)?.unwrap_or_default();
@@ -39,8 +38,7 @@ pub fn fetch_access_data(conn: &Connection<AutocommitOn>, fund_num: &str, invent
             let номер_описи: String = row.get_data(7)?.unwrap_or_default();
             let номер_фонда: String = row.get_data(8)?.unwrap_or_default();
 
-            // Создание структуры данных для хранения извлеченных данных
-            let data = AccessData {
+            let data = AccessUnit {
                 номер_дела,
                 наименование_дела,
                 год_начала,
