@@ -1,17 +1,6 @@
 use odbc::{Connection, Data, Statement};
 use odbc::odbc_safe::AutocommitOn;
-
-#[derive(Debug)]
-pub struct AccessUnit {
-    pub номер_дела: String,
-    pub наименование_дела: String,
-    pub год_начала: i32,
-    pub год_конца: i32,
-    pub количество_листов: i32,
-    pub точная_дата: String,
-    pub номер_описи: String,
-    pub номер_фонда: String,
-}
+use crate::models::access::AccessUnit;
 
 pub fn fetch_access_data(conn: &Connection<AutocommitOn>, fund_num: &str, inventory_num: &str) -> odbc::Result<Vec<AccessUnit>> {
     let sql_text = r#"SELECT
@@ -29,24 +18,24 @@ pub fn fetch_access_data(conn: &Connection<AutocommitOn>, fund_num: &str, invent
 
     if let Data(mut cursor) = stmt.exec_direct(sql_text)? {
         while let Some(mut row) = cursor.fetch()? {
-            let номер_дела: String = row.get_data(1)?.unwrap_or_default();
-            let наименование_дела: String = row.get_data(2)?.unwrap_or_default();
-            let год_начала: i32 = row.get_data(3)?.unwrap_or_default();
-            let год_конца: i32 = row.get_data(4)?.unwrap_or_default();
-            let количество_листов: i32 = row.get_data(5)?.unwrap_or_default();
-            let точная_дата: String = row.get_data(6)?.unwrap_or_default();
-            let номер_описи: String = row.get_data(7)?.unwrap_or_default();
-            let номер_фонда: String = row.get_data(8)?.unwrap_or_default();
+            let unit_number: String = row.get_data(1)?.unwrap_or_default();
+            let name: String = row.get_data(2)?.unwrap_or_default();
+            let year_start: i32 = row.get_data(3)?.unwrap_or_default();
+            let year_end: i32 = row.get_data(4)?.unwrap_or_default();
+            let pages_count: i32 = row.get_data(5)?.unwrap_or_default();
+            let exact_date: String = row.get_data(6)?.unwrap_or_default();
+            let inventory_number: String = row.get_data(7)?.unwrap_or_default();
+            let fund_number: String = row.get_data(8)?.unwrap_or_default();
 
             let data = AccessUnit {
-                номер_дела,
-                наименование_дела,
-                год_начала,
-                год_конца,
-                количество_листов,
-                точная_дата,
-                номер_описи,
-                номер_фонда,
+                unit_number,
+                name,
+                year_start,
+                year_end,
+                pages_count,
+                exact_date,
+                inventory_number,
+                fund_number,
             };
             result_set.push(data);
         }

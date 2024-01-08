@@ -1,9 +1,8 @@
 use odbc::{Connection, Data, Statement};
 use odbc::odbc_safe::AutocommitOn;
-use chrono::{DateTime, Utc};
+use chrono::{Utc};
 use uuid::Uuid;
-use regex::Regex;
-use crate::db::access::AccessUnit;
+use crate::models::sql_server::{IsnCodes, TblUnit};
 
 pub fn get_isn_codes(conn: &Connection<AutocommitOn>, fund_num: &str, inventory_num: &str) -> odbc::Result<IsnCodes> {
     let sql_text = r#"
@@ -98,34 +97,39 @@ pub fn insert_new_units(conn: &Connection<AutocommitOn>, units: Vec<TblUnit>) ->
             insert_sql += ", ";
         }
         first = false;
-        insert_sql += &format!(
-            "('{}', '{}', '{}', '{}', '{}', {}, {},
-                     {}, {}, '{}', {},
-                     {}, {}, '{}', '{}',
-                     '{}', '{}', '{}', '{}',
-                     '{}', '{}', {}, {}, '{}', {},
-                     '{}', '{}', '{}', '{}', {},
-                     '{}', '{}')",
-            unit.id, unit.owner_id, unit.creation_date_time.format("%Y-%m-%dT%H:%M:%S%.3f").to_string(), unit.status_id, unit.deleted, unit.isn_unit, unit.isn_inventory,
-            unit.isn_doc_type, unit.isn_securlevel, unit.security_char, unit.isn_inventory_cls,
-            unit.unit_kind, unit.unit_num_1, unit.unit_num_2.unwrap(), unit.name,
-            unit.is_in_search,
-            unit.is_lost,
-            unit.has_sf,
-            unit.has_fp,
-            unit.has_defects,
-            unit.catalogued,
-            unit.weight,
-            unit.start_year,
-            unit.start_year_inexact,
-            unit.end_year,
-            unit.end_year_inexact,
-            unit.medium_type,
-            unit.has_treasures,
-            unit.is_museum_item,
-            unit.page_count,
-            unit.cardboarded,
-            unit.all_date
+        insert_sql += &format!("('{}', '{}', '{}', '{}', '{}', {}, {}, {}, {}, '{}', {}, {}, {}, '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', {}, {}, '{}', {}, '{}', '{}', '{}', '{}', {}, '{}', '{}')",
+                               unit.id,
+                               unit.owner_id,
+                               unit.creation_date_time.format("%Y-%m-%dT%H:%M:%S%.3f").to_string(),
+                               unit.status_id,
+                               unit.deleted,
+                               unit.isn_unit,
+                               unit.isn_inventory,
+                               unit.isn_doc_type,
+                               unit.isn_securlevel,
+                               unit.security_char,
+                               unit.isn_inventory_cls,
+                               unit.unit_kind,
+                               unit.unit_num_1,
+                               unit.unit_num_2.unwrap(),
+                               unit.name,
+                               unit.is_in_search,
+                               unit.is_lost,
+                               unit.has_sf,
+                               unit.has_fp,
+                               unit.has_defects,
+                               unit.catalogued,
+                               unit.weight,
+                               unit.start_year,
+                               unit.start_year_inexact,
+                               unit.end_year,
+                               unit.end_year_inexact,
+                               unit.medium_type,
+                               unit.has_treasures,
+                               unit.is_museum_item,
+                               unit.page_count,
+                               unit.cardboarded,
+                               unit.all_date
         );
     }
 
@@ -134,88 +138,4 @@ pub fn insert_new_units(conn: &Connection<AutocommitOn>, units: Vec<TblUnit>) ->
     stmt.exec_direct(&*insert_sql)?;
 
     Ok(())
-}
-
-#[derive(Debug)]
-pub struct IsnCodes {
-    pub isn_fund: i64,
-    pub isn_inventory: i64,
-}
-
-#[derive(Debug)]
-pub struct TblUnit {
-    pub id: Uuid,
-    pub owner_id: Uuid,
-    pub creation_date_time: DateTime<Utc>,
-    pub status_id: Uuid,
-    pub deleted: bool,
-    pub isn_unit: i64,
-    pub isn_inventory: i64,
-    pub isn_doc_type: i64,
-    pub isn_securlevel: i64,
-    pub security_char: String,
-    pub isn_inventory_cls: i64,
-    pub unit_kind: i32,
-    pub unit_num_1: String,
-    pub unit_num_2: Option<String>,
-    pub name: String,
-    pub is_in_search: String,
-    pub is_lost: String,
-    pub has_sf: String,
-    pub has_fp: String,
-    pub has_defects: String,
-    pub catalogued: String,
-    pub weight: i32,
-    pub start_year: i32,
-    pub start_year_inexact: String,
-    pub end_year: i32,
-    pub end_year_inexact: String,
-    pub medium_type: String,
-    pub has_treasures: String,
-    pub is_museum_item: String,
-    pub page_count: i32,
-    pub cardboarded: String,
-    pub all_date: String,
-}
-
-impl TblUnit {
-    pub fn new(isn_codes: &IsnCodes, access_unit: &AccessUnit, isn_unit: i64) -> TblUnit {
-        let regex = Regex::new(r"(\d*)(\D*)").unwrap();
-        let caps = regex.captures(&access_unit.номер_дела).unwrap();
-
-        TblUnit {
-            id: Uuid::new_v4(),
-            owner_id: Uuid::parse_str("12345678-9012-3456-7890-123456789012").unwrap(),
-            creation_date_time: Utc::now(),
-            status_id: Uuid::parse_str("DD6ABDFF-D922-4746-80B8-15BE426E3849").unwrap(),
-            deleted: false,
-            isn_unit,
-            isn_inventory: isn_codes.isn_inventory,
-            isn_doc_type: 1,
-            isn_securlevel: 1,
-            security_char: "o".to_string(),
-            isn_inventory_cls: isn_codes.isn_inventory,
-            unit_kind: 703,
-            unit_num_1: caps.get(1).map_or("", |m| m.as_str()).to_string(),
-            unit_num_2: caps.get(2).map_or(None, |m| Some(m.as_str().to_string())),
-            name: access_unit.наименование_дела.clone(),
-            is_in_search: "N".to_string(),
-            is_lost: "N".to_string(),
-            has_sf: "N".to_string(),
-            has_fp: "N".to_string(),
-            has_defects: "N".to_string(),
-            catalogued: "N".to_string(),
-            weight: 0,
-            start_year: access_unit.год_начала,
-            start_year_inexact: "N".to_string(),
-            end_year: access_unit.год_конца,
-            end_year_inexact: "N".to_string(),
-            medium_type: "T".to_string(),
-            has_treasures: "N".to_string(),
-            is_museum_item: "N".to_string(),
-            page_count: access_unit.количество_листов,
-            cardboarded: "N".to_string(),
-            all_date: access_unit.точная_дата.clone(),
-        }
-    }
 }

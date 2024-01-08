@@ -1,5 +1,10 @@
 mod config;
 
+mod models {
+    pub mod access;
+    pub mod sql_server;
+}
+
 mod db {
     pub mod access;
     pub mod sql_server;
