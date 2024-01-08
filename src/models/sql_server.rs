@@ -4,12 +4,6 @@ use uuid::Uuid;
 use crate::models::access::AccessUnit;
 
 #[derive(Debug)]
-pub struct IsnCodes {
-    pub isn_fund: i64,
-    pub isn_inventory: i64,
-}
-
-#[derive(Debug)]
 pub struct TblUnit {
     pub id: Uuid,
     pub owner_id: Uuid,
@@ -46,7 +40,7 @@ pub struct TblUnit {
 }
 
 impl TblUnit {
-    pub fn new(isn_codes: &IsnCodes, access_unit: &AccessUnit, isn_unit: i64) -> TblUnit {
+    pub fn new(access_unit: &AccessUnit, isn_inventory: i64, isn_unit: i64) -> TblUnit {
         let regex = Regex::new(r"(\d*)(\D*)").unwrap();
         let caps = regex.captures(&access_unit.unit_number).unwrap();
 
@@ -57,11 +51,11 @@ impl TblUnit {
             status_id: Uuid::parse_str("DD6ABDFF-D922-4746-80B8-15BE426E3849").unwrap(),
             deleted: false,
             isn_unit,
-            isn_inventory: isn_codes.isn_inventory,
+            isn_inventory,
             isn_doc_type: 1,
             isn_securlevel: 1,
             security_char: "o".to_string(),
-            isn_inventory_cls: isn_codes.isn_inventory,
+            isn_inventory_cls: isn_inventory,
             unit_kind: 703,
             unit_num_1: caps.get(1).map_or("", |m| m.as_str()).to_string(),
             unit_num_2: caps.get(2).map_or(None, |m| Some(m.as_str().to_string())),
