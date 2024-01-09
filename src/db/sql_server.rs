@@ -25,7 +25,7 @@ pub fn get_isn_inventory(conn: &Connection<AutocommitOn>, fund_num: &str, invent
 
     if inventory_num_2.is_some() && !inventory_num_2.clone().unwrap().is_empty() {
         sql_text += " and tblINVENTORY.INVENTORY_NUM_2 = ?";
-        stmt = stmt.bind_parameter(3, &inventory_num_2.unwrap())?;
+        stmt = stmt.bind_parameter(3, &inventory_num_2)?;
     }
 
     debug!("{}", sql_text);
@@ -78,7 +78,7 @@ fn create_uuid(most_sig_bits: i64, least_sig_bits: i64) -> Uuid {
     Uuid::from_bytes(uuid_bytes)
 }
 
-pub(crate) fn insert_inventory_structure(conn: &Connection<AutocommitOn>, isn_inventory_cls: i64) -> odbc::Result<()> {
+pub fn insert_inventory_structure(conn: &Connection<AutocommitOn>, isn_inventory_cls: i64) -> odbc::Result<()> {
     let uuid = create_uuid(0, isn_inventory_cls);
     let insert_sql = &format!(r#"
         insert into tblINVENTORY_STRUCTURE (ID, OwnerID, CreationDateTime, DocID, RowID, StatusID, Deleted, ISN_INVENTORY_CLS, ISN_INVENTORY, NAME, FOREST_ELEM, PROTECTED, WEIGHT)
@@ -105,7 +105,6 @@ pub(crate) fn insert_inventory_structure(conn: &Connection<AutocommitOn>, isn_in
     Ok(())
 }
 
-// TODO: Подумать над нахождением дублей
 pub fn insert_new_units(conn: &Connection<AutocommitOn>, units: Vec<TblUnit>) -> odbc::Result<()> {
     let mut first = true;
     let mut insert_sql = r#"
@@ -137,7 +136,7 @@ pub fn insert_new_units(conn: &Connection<AutocommitOn>, units: Vec<TblUnit>) ->
                                unit.isn_inventory_cls,
                                unit.unit_kind,
                                unit.unit_num_1,
-                               unit.unit_num_2.unwrap(),
+                               unit.unit_num_2.clone().unwrap(),
                                unit.name,
                                unit.is_in_search,
                                unit.is_lost,

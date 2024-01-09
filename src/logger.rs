@@ -4,6 +4,7 @@ use std::path::Path;
 use chrono::Local;
 use log::{LevelFilter};
 use simplelog::{ColorChoice, CombinedLogger, ConfigBuilder, TerminalMode, TermLogger, WriteLogger};
+use crate::utils::exit_gracefully_with_error_code;
 
 pub fn config_logger() {
     let log_dir = Path::new("log");
@@ -18,7 +19,7 @@ pub fn config_logger() {
     let log_file = File::create(new_log).unwrap();
 
     let config = ConfigBuilder::new().set_time_offset_to_local().unwrap().build();
-    CombinedLogger::init(vec![
+    match CombinedLogger::init(vec![
         TermLogger::new(
             LevelFilter::Info,
             config.clone(),
@@ -26,9 +27,15 @@ pub fn config_logger() {
             ColorChoice::Auto,
         ),
         WriteLogger::new(
-            LevelFilter::Debug,
+            LevelFilter::Info,
             config,
             log_file,
         ),
-    ]).expect("Ошибка при инициализации логирования");
+    ]) {
+        Ok(_) => {}
+        Err(e) => {
+            eprintln!("Ошибка при инициализации логирования: {}", e);
+            exit_gracefully_with_error_code();
+        }
+    }
 }

@@ -1,5 +1,6 @@
 use std::fs;
 use serde::Deserialize;
+use crate::utils::exit_gracefully_with_error_code;
 
 #[derive(Deserialize)]
 pub struct Config {
@@ -9,6 +10,16 @@ pub struct Config {
 }
 
 pub fn read_config() -> Config {
-    let contents = fs::read_to_string("config.toml").expect("Не найден конфиг файл config.toml");
-    toml::from_str(&contents).expect("Нет необходимых параметров в конфиг файле config.toml")
+    let contents = match fs::read_to_string("config.toml") {
+        Ok(c) => c,
+        Err(e) => {
+            eprintln!("Ошибка при чтении конфиг файла config.toml: {}", e);
+            exit_gracefully_with_error_code();
+        }
+    };
+
+    toml::from_str(&contents).unwrap_or_else(|e| {
+        eprintln!("Ошибка при чтении необходимых параметров в конфиг файле config.toml: {}", e);
+        exit_gracefully_with_error_code();
+    })
 }
