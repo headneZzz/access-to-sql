@@ -1,8 +1,8 @@
-use std::fs;
+use std::{fs, panic};
 use std::fs::File;
 use std::path::Path;
 use chrono::Local;
-use log::{LevelFilter};
+use log::{error, LevelFilter};
 use simplelog::{ColorChoice, CombinedLogger, ConfigBuilder, TerminalMode, TermLogger, WriteLogger};
 use crate::utils::exit_gracefully_with_error_code;
 
@@ -38,4 +38,17 @@ pub fn config_logger() {
             exit_gracefully_with_error_code();
         }
     }
+    setup_panic_hook()
+}
+
+fn setup_panic_hook() {
+    panic::set_hook(Box::new(|panic_info| {
+        let message = if let Some(s) = panic_info.payload().downcast_ref::<&str>() {
+            *s
+        } else {
+            "Panic occurred but can't get the message."
+        };
+
+        error!("Panic occurred: {}", message);
+    }));
 }
